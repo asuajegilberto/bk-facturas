@@ -42,6 +42,15 @@ class UsersRepository extends ServiceEntityRepository
         }
     }
 
+    public function pay(Users $user,$balance){
+
+        $user->setBalance($balance);
+        $this->_em->persist($user);
+        $this->_em->flush();
+
+        return $user;
+    }
+
     // /**
     //  * @return Users[] Returns an array of Users objects
     //  */
