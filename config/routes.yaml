@@ -3,3 +3,29 @@
 #    controller: App\Controller\DefaultController::index
 api_login_check:
     path: /api/login_check
+
+crear_usuario:
+    path: /users/new
+    controller: App\Controller\UsersController::new
+    methods: [POST]
+
+mostrar_factura:
+    path: /invoice/show
+    controller: App\Controller\InvoiceController::show
+
+pagar_factura:
+    path: /invoice/pay
+    controller: App\Controller\InvoiceController::pay
+    
+
+listar_facturas:
+    path: /api/invoice
+    controller: App\Controller\InvoiceController::index
+
+crear_factura:
+    path: /api/invoice/new
+    controller: App\Controller\InvoiceController::new
+
+
+    
+
