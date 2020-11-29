@@ -14,45 +14,49 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 
-/**
- * @Route("/api/invoice")
- */
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+
+
+
 class InvoiceController extends AbstractController
 {
 
+    /**
+     * @var TokenStorageInterface
+     */
     private $invoiceRepository;
     private $usersRepository;
     private $mailer;
+    private $tokenStorage;
 
-    public function __construct(InvoiceRepository $invoiceRepository,UsersRepository $usersRepository,\Swift_Mailer $mailer)
+    public function __construct(InvoiceRepository $invoiceRepository,UsersRepository $usersRepository,\Swift_Mailer $mailer,TokenStorageInterface $tokenStorage)
     {
         $this->invoiceRepository = $invoiceRepository;
         $this->usersRepository = $usersRepository;
         $this->mailer = $mailer;
+        $this->tokenStorage = $tokenStorage;
     }
 
-    /**
-     * @Route("/", name="invoice_index", methods={"POST"})
-     */
+
     public function index(InvoiceRepository $invoiceRepository): Response
     {
-        $invoice = $this->invoiceRepository->findBy(['Users'=>1]);
+        $id = $this->tokenStorage->getToken()->getUser()->getId();
+        $invoice = $this->invoiceRepository->findBy(['Users'=>$id]);
         return $this->json($invoice);
     }
 
-    /**
-     * @Route("/new", name="invoice_new", methods={"GET","POST"})
-     */
+
     public function new(Request $request): Response
     {
+        $id = $this->tokenStorage->getToken()->getUser()->getId();
         $data = json_decode($request->getContent(),true);
         
         
-        if(empty($data['description']) || empty($data['productService']) || empty($data['subTotal']) || empty($data['discount']) || empty($data['total']) || empty($data['email']) || empty($data['user']) ){
+        if(empty($data['description']) || empty($data['productService']) || empty($data['subTotal']) || empty($data['discount']) || empty($data['total']) || empty($data['email']) ){
             throw new NotFoundHttpException('Expecting mandatory parameters!');
           }
 
-          $user = $this->usersRepository->findOneBy(['id'=>$data['user']]);
+          $user = $this->usersRepository->findOneBy(['id'=>$id]);
           $token = sha1(mt_rand(1, 90000) . 'SALT');
           
           $this->invoiceRepository->save($data['description'],  $data['productService'] ,$data['subTotal'] ,$data['discount'] ,$data['total'] ,$data['email'], $token,$user);
@@ -62,9 +66,7 @@ class InvoiceController extends AbstractController
       
     }
 
-    /**
-     * @Route("/show", name="invoice_show", methods={"POST"})
-     */
+
     public function show(Request $request): Response
     {
         $data = json_decode($request->getContent(),true);
@@ -76,9 +78,7 @@ class InvoiceController extends AbstractController
           return $this->json($invoice);
     }
 
-    /**
-     * @Route("/pay", name="invoice_pay", methods={"POST"})
-     */
+
     public function pay(Request $request): Response
     {
         $data = json_decode($request->getContent(),true);
@@ -94,41 +94,6 @@ class InvoiceController extends AbstractController
         return new JsonResponse(['status' => 'user updated'], Response::HTTP_CREATED);
 
     }
-
-    /**
-     * @Route("/{id}/edit", name="invoice_edit", methods={"GET","POST"})
-     */
-    public function edit(Request $request, Invoice $invoice): Response
-    {
-        $form = $this->createForm(InvoiceType::class, $invoice);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $this->getDoctrine()->getManager()->flush();
-
-            return $this->redirectToRoute('invoice_index');
-        }
-
-        return $this->render('invoice/edit.html.twig', [
-            'invoice' => $invoice,
-            'form' => $form->createView(),
-        ]);
-    }
-
-    /**
-     * @Route("/{id}", name="invoice_delete", methods={"DELETE"})
-     */
-    public function delete(Request $request, Invoice $invoice): Response
-    {
-        if ($this->isCsrfTokenValid('delete'.$invoice->getId(), $request->request->get('_token'))) {
-            $entityManager = $this->getDoctrine()->getManager();
-            $entityManager->remove($invoice);
-            $entityManager->flush();
-        }
-
-        return $this->redirectToRoute('invoice_index');
-    }
-
 
     public function sendMail($mail,$token)
     {
