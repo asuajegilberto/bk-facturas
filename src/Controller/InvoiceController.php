@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 
 /**
- * @Route("/invoice")
+ * @Route("/api/invoice")
  */
 class InvoiceController extends AbstractController
 {
