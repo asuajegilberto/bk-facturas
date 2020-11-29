@@ -19,6 +19,29 @@ class InvoiceRepository extends ServiceEntityRepository
         parent::__construct($registry, Invoice::class);
     }
 
+    public function save($description,  $productService ,$subTotal ,$discount ,$total ,$email, $token,$user){
+        
+        try {
+            $invoice = new Invoice();
+            $invoice->setDescription($description);
+            $invoice->setProductService( $productService);
+            $invoice->setSubTotal($subTotal);
+            $invoice->setDiscount($discount);
+            $invoice->setTotal($total);
+            $invoice->setEmail($email);
+            $invoice->setToken($token);
+            $invoice->setUsers($user);
+    
+            $this->_em->persist($invoice);
+            $this->_em->flush();
+    
+            return $invoice;
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+
+    }
+
     // /**
     //  * @return Invoice[] Returns an array of Invoice objects
     //  */

@@ -52,6 +52,12 @@ class Invoice
      */
     private $token;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Users::class)
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $Users;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -137,6 +143,18 @@ class Invoice
     public function setToken(string $token): self
     {
         $this->token = $token;
+
+        return $this;
+    }
+
+    public function getUsers(): ?Users
+    {
+        return $this->Users;
+    }
+
+    public function setUsers(?Users $Users): self
+    {
+        $this->Users = $Users;
 
         return $this;
     }
